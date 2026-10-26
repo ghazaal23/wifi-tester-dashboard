@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --color-accent: #10b981;
+}
+
+body {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Scrollbar tipis khusus untuk area sidebar agar tetap terlihat rapi */
+aside nav::-webkit-scrollbar {
+  width: 4px;
+}
+aside nav::-webkit-scrollbar-thumb {
+  background-color: rgb(51 65 85); /* slate-700 */
+  border-radius: 9999px;
+}

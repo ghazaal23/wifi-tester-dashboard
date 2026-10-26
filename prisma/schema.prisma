@@ -1,0 +1,119 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Device {
+  id               String               @id @default(cuid())
+  deviceId         String               @unique // Contoh: "xiao-c3-01"
+  name             String
+  isActive         Boolean              @default(true)
+  registeredAt     DateTime             @default(now())
+
+  location         AccessPointLocation? @relation(fields: [locationId], references: [id])
+  locationId       String?
+  alertRules       AlertRule[]
+  telemetryReports TelemetryReport[]
+}
+
+model AccessPointLocation {
+  id           String   @id @default(cuid())
+  buildingName String
+  floor        String?
+  latitude     Float?
+  longitude    Float?
+  notes        String?
+  devices      Device[]
+}
+
+model User {
+  id           String                @id @default(cuid())
+  email        String                @unique
+  password     String
+  role         String                @default("viewer") // "viewer" | "admin"
+  alertRules   AlertRule[]
+  channels     NotificationChannel[]
+}
+
+model AlertRule {
+  id        String     @id @default(cuid())
+  metric    String     // "rssi" | "ping_ms" | "packet_loss"
+  operator  String     // "lt" | "gt"
+  threshold Float
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+
+  device    Device     @relation(fields: [deviceId], references: [id])
+  deviceId  String
+  createdBy User       @relation(fields: [userId], references: [id])
+  userId    String
+  logs      AlertLog[]
+}
+
+model AlertLog {
+  id             String    @id @default(cuid())
+  triggeredAt    DateTime  @default(now())
+  metricValue    Float
+  status         String    @default("sent") // "sent" | "acknowledged" | "dismissed"
+  acknowledgedAt DateTime?
+
+  rule           AlertRule @relation(fields: [ruleId], references: [id])
+  ruleId         String
+}
+
+model NotificationChannel {
+  id       String  @id @default(cuid())
+  type     String  // "email" | "telegram"
+  target   String  // Email address / Chat ID Telegram
+  isActive Boolean @default(true)
+
+  user     User    @relation(fields: [userId], references: [id])
+  userId   String
+}
+
+model SpeedTestResult {
+  id             String   @id @default(cuid())
+  deviceId       String   // Input Device ID dari frontend /speed-test
+  mode           String   // "mlab" | "internal-ub"
+
+  // Hasil metrik
+  download       Float    // Mbps
+  upload         Float    // Mbps
+  ping           Float    // ms
+  jitter         Float    // ms
+  packetLoss     Float    // %
+
+  // Lokasi
+  locationLat    Float?
+  locationLng    Float?
+  locationManual String?
+
+  testedAt       DateTime @default(now())
+
+  @@index([deviceId])
+  @@index([testedAt])
+}
+
+model TelemetryReport {
+  id           String   @id @default(cuid())
+  deviceId     String
+  testType     String   @default("EAP-PEAP-MSCHAPV2")
+  downloadMbps Float    @default(0)
+  uploadMbps   Float    @default(0)
+  pingMs       Float    @default(0)
+  jitterMs     Float    @default(0)
+  packetLoss   Float    @default(0)
+  locationName String?  @default("WiFi-UB.x")
+  raw          Json?
+  createdAt    DateTime @default(now())
+
+  // Relasi balik ke model Device
+  device       Device?  @relation(fields: [deviceId], references: [deviceId], onDelete: Cascade)
+
+  @@index([deviceId, createdAt])
+}

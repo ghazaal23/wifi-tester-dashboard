@@ -1,0 +1,32 @@
+// ============================================================
+// TAMBAHKAN model ini ke file prisma/schema.prisma yang SUDAH ADA
+// (di bawah model AlertLog/NotificationChannel yang sudah dibuat
+// sebelumnya di Panduan_Setup_Dashboard_WiFi_Tester.md)
+//
+// JANGAN timpa seluruh schema.prisma — cukup tambahkan blok
+// model di bawah ini ke file yang sudah ada.
+// ============================================================
+
+model SpeedTestResult {
+  id             String   @id @default(cuid())
+
+  deviceId       String   // teks bebas dari input "Device ID" di halaman Speed Test
+  mode           String   // "mlab" | "internal-ub"
+
+  // Hasil metrik pengujian
+  download       Float    // Mbps
+  upload         Float    // Mbps
+  ping           Float    // ms
+  jitter         Float    // ms
+  packetLoss     Float    // %
+
+  // Lokasi — hanya salah satu yang terisi, tergantung sumbernya
+  locationLat    Float?
+  locationLng    Float?
+  locationManual String?
+
+  testedAt       DateTime @default(now())
+
+  @@index([deviceId])
+  @@index([testedAt])
+}
